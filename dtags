@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# dtags -- Parallelize a specific usage of ctags for C source
+#          files (my usual usage: "ctags -R .").
+#
+# Jon Simons
+# November 1, 2009
+
+# Update this to point to your Bob Jenkins hashing ctags
+CTAGS=./ctags
+SORT=/usr/bin/sort
+RM=/bin/rm
+TMP_RESULT_FILES=""
+PIDS=""
+RESULTS=""
+
+for i in *
+do
+  if [ -d $i ]
+  then
+    d=${i}
+    TMP_RESULT_FILES="$TMP_RESULT_FILES $d.ctags"
+    $CTAGS -f $d.ctags -R $d &
+    PIDS="$PIDS $!"
+  elif [ -f $i ]
+  then
+    f=${i}
+    TOP_LEVEL_FILES="$TOP_LEVEL_FILES $f"
+  fi
+done
+
+TMP_RESULT_FILES="$TMP_RESULT_FILES __.ctags"
+$CTAGS -f __.ctags $TOP_LEVEL_FILES &
+PIDS="$PIDS $!"
+
+for p in $PIDS
+do
+  wait $p
+done
+
+#
+# NOTE: This would not normally produce the same exact results as running a
+#       single "ctags -R .", because of the way the C Ctags parser codifies
+#       anonymous datatypes.  So I am using a customized version which
+#       generates anonymous IDs keyed from file name and line number,
+#       instead of being dependent on that run's working set.
+#
+LC_COLLATE=C LC_ALL=C $SORT --merge --unique $TMP_RESULT_FILES > tags
+
+for f in $TMP_RESULT_FILES
+do
+  rm $f
+done
