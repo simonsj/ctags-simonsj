@@ -1,0 +1,10 @@
+.indent.pro
+*.o
+Makefile
+config.h
+config.log
+config.status
+ctags
+tags
+syntax.vim
+
