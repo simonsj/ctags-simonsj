@@ -28,6 +28,7 @@ SOURCES = \
 	jscript.c \
 	keyword.c \
 	lisp.c \
+	lookup3.c \
 	lregex.c \
 	lua.c \
 	main.c \

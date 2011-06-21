@@ -18,6 +18,11 @@
 #include <string.h>
 #include <setjmp.h>
 
+#define JS_IMPROVE_ANON
+#ifdef JS_IMPROVE_ANON
+#include "lookup3.c" /* Bob Jenkins' hash function */
+#endif
+
 #include "debug.h"
 #include "entry.h"
 #include "get.h"
@@ -260,8 +265,10 @@ static langType Lang_vera;
 static vString *Signature;
 static boolean CollectingSignature;
 
+#ifndef JS_IMPROVE_ANON
 /* Number used to uniquely identify anonymous structs and unions. */
 static int AnonymousID = 0;
+#endif
 
 /* Used to index into the CKinds table. */
 typedef enum {
@@ -2707,8 +2714,17 @@ static void tagCheck (statementInfo *const st)
 					/*  For an anonymous struct or union we use a unique ID
 					 *  a number, so that the members can be found.
 					 */
+#ifndef JS_IMPROVE_ANON
 					char buf [20];  /* length of "_anon" + digits  + null */
 					sprintf (buf, "__anon%d", ++AnonymousID);
+#else
+					char buf [ 6 + 8 + 1 + 16 + 1 ];
+					const char * fileName = getInputFileName ();
+					const size_t nameLen = getInputFileNameLength ();
+					uint32_t fileNameHash = hashlittle (fileName, nameLen, 0);
+					const unsigned long lineNum = token->lineNumber;
+					sprintf (buf, "__anon%x:%lx", fileNameHash, lineNum);
+#endif
 					vStringCopyS (st->blockName->name, buf);
 					st->blockName->type = TOKEN_NAME;
 					st->blockName->keyword = KEYWORD_NONE;

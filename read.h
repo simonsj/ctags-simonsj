@@ -33,6 +33,9 @@
 */
 #define getInputLineNumber()     File.lineNumber
 #define getInputFileName()       vStringValue (File.source.name)
+#ifdef JS_IMPROVE_ANON
+#define getInputFileNameLength() vStringLength (File.source.name)
+#endif
 #define getInputFilePosition()   File.filePosition
 #define getSourceFileName()      vStringValue (File.source.name)
 #define getSourceFileTagPath()   File.source.tagPath
